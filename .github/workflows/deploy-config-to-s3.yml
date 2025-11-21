@@ -1,0 +1,31 @@
+name: Deploy config to S3
+
+on:
+  push:
+    # Trigger when files under config/ change (add other paths as needed)
+    paths:
+      - 'config/**'
+      - 'settings.json'
+
+jobs:
+  deploy:
+    name: Deploy changed config to S3
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Sync config/ to S3
+        env:
+          S3_BUCKET: ${{ secrets.S3_BUCKET }}
+        run: |
+          # create target prefix if you want to place config under a subpath, e.g. s3://$S3_BUCKET/config/
+          aws s3 sync config/ s3://$S3_BUCKET/config/ --delete
